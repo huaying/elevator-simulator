@@ -2,6 +2,8 @@
 
 Object-Oriented Design - Design Elevator
 
+Codesandbox: https://codesandbox.io/s/github/huaying/elevator-simulator
+
 Ref:
 - https://github.com/groverkaran11/elevator-control-system
 - https://www.geeksforgeeks.org/scan-elevator-disk-scheduling-algorithms/
