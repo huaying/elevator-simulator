@@ -27,6 +27,7 @@ export default class ElevatorSystem extends React.Component<Props, State> {
       this.elevators.push(new Elevator());
     }
     this.requestQueue = [];
+    this.processRequestQueue();
   }
 
   /*
@@ -87,21 +88,24 @@ export default class ElevatorSystem extends React.Component<Props, State> {
     const destFloor = parseInt(this.state.requestDestination, 10) - 1;
 
     this.requestQueue.push(new Request(floor, destFloor));
-
-    this.processQueue();
   };
 
-  private processQueue = () => {
-    const newQueue: Request[] = [];
-    this.requestQueue.forEach((req) => {
-      const elevator = this.findElevator(req);
-      if (elevator) {
-        elevator.request(req, this.updateInfo);
-      } else {
-        newQueue.push(req);
-      }
-    });
-    this.requestQueue = newQueue;
+  private processRequestQueue = () => {
+    // TODO: requests from the same floor and having the same direction
+    // can be aggregated
+    if (this.requestQueue.length > 0) {
+      const newQueue: Request[] = [];
+      this.requestQueue.forEach((req) => {
+        const elevator = this.findElevator(req);
+        if (elevator) {
+          elevator.request(req, this.updateInfo);
+        } else {
+          newQueue.push(req);
+        }
+      });
+      this.requestQueue = newQueue;
+    }
+    setTimeout(this.processRequestQueue, 100);
   };
 
   /* 
@@ -110,7 +114,6 @@ export default class ElevatorSystem extends React.Component<Props, State> {
 
   private updateInfo = () => {
     this.forceUpdate();
-    this.processQueue();
   };
 
   private handleRequestFloorChange = (
@@ -167,6 +170,12 @@ export default class ElevatorSystem extends React.Component<Props, State> {
         </div>
 
         <div className="mt-5 p-3 border-solid border-4">
+          {this.requestQueue.length > 0 && (
+            <div>
+              Request Queue:{" "}
+              {this.requestQueue.map((req) => req.toString()).join(", ")}
+            </div>
+          )}
           {this.elevators.map((elevator, idx) => (
             <div className="mb-1">
               Elevator: {idx + 1}
