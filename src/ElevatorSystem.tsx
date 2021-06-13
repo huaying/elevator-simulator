@@ -98,7 +98,7 @@ export default class ElevatorSystem extends React.Component<Props, State> {
       this.requestQueue.forEach((req) => {
         const elevator = this.findElevator(req);
         if (elevator) {
-          elevator.request(req, this.updateInfo);
+          elevator.request(req, this.triggerRerender);
         } else {
           newQueue.push(req);
         }
@@ -112,7 +112,7 @@ export default class ElevatorSystem extends React.Component<Props, State> {
     methods below are for display 
   */
 
-  private updateInfo = () => {
+  private triggerRerender = () => {
     this.forceUpdate();
   };
 

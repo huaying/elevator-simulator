@@ -1,7 +1,7 @@
 import { Direction, FloorNumber, ElevatorSpeed } from "./constatns";
 import Request from "./Request";
 
-type UpdateInfo = () => void;
+type TriggerRerender = () => void;
 
 /*
   LOOK Algorithm
@@ -13,9 +13,13 @@ export default class Elevator {
   private floorRequestInfo: Request[][];
   private upHead: number | null = null;
   private downHead: number | null = null;
+  private upStops: Set<number>;
+  private downStops: Set<number>;
 
   constructor() {
     this.floorRequestInfo = new Array(FloorNumber).fill(null).map((_) => []);
+    this.upStops = new Set();
+    this.downStops = new Set();
   }
 
   public getCurFloor() {
@@ -46,70 +50,73 @@ export default class Elevator {
     return info ? `Request ${info}` : "";
   }
 
-  private updateBound(floor: number) {
+  private addRequests(req: Request) {
+    this.floorRequestInfo[req.floor].push(req);
+    this.addStop(req.floor);
+  }
+
+  private addStop(floor: number) {
     if (this.curFloor < floor) {
-      this.upHead = this.upHead ? Math.max(floor, this.upHead) : floor;
+      this.upStops.add(floor);
     } else if (this.curFloor > floor) {
-      this.downHead = this.downHead ? Math.min(floor, this.downHead) : floor;
+      this.downStops.add(floor);
     }
   }
 
   private processRequest(floor: number) {
     if (this.floorRequestInfo[floor].length > 0) {
       this.floorRequestInfo[floor].forEach((req) => {
-        this.updateBound(req.destFloor);
+        this.addStop(req.destFloor);
       });
       this.floorRequestInfo[floor] = [];
     }
   }
 
-  public request(req: Request, updateInfo: UpdateInfo) {
+  public request(req: Request, triggerRerender: TriggerRerender) {
     const floor = req.floor;
     const destFloor = req.destFloor;
 
     if (this.direction === Direction.IDLE) {
       if (this.curFloor > floor) {
         this.direction = Direction.DOWN;
-        this.floorRequestInfo[floor].push(req);
-        this.updateBound(floor);
+        this.addRequests(req);
       } else if (this.curFloor < floor) {
         this.direction = Direction.UP;
-        this.floorRequestInfo[floor].push(req);
-        this.updateBound(floor);
+        this.addRequests(req);
       } else if (floor !== destFloor) {
         this.direction =
           destFloor > this.curFloor ? Direction.UP : Direction.DOWN;
-        this.updateBound(destFloor);
+        this.addStop(destFloor);
       }
-      setTimeout(() => this.step(updateInfo), ElevatorSpeed);
+      setTimeout(() => this.step(triggerRerender), ElevatorSpeed);
     } else {
-      this.floorRequestInfo[floor].push(req);
-      this.updateBound(floor);
+      this.addRequests(req);
     }
   }
 
-  public step(updateInfo: UpdateInfo) {
+  public step(triggerRerender: TriggerRerender) {
     if (this.direction === Direction.UP) {
       this.curFloor += 1;
       this.processRequest(this.curFloor);
-      if (this.curFloor === this.upHead) {
+      this.upStops.delete(this.curFloor);
+      if (this.upStops.size === 0) {
         this.direction =
-          this.downHead === null ? Direction.IDLE : Direction.DOWN;
-        this.upHead = null;
+          this.downStops.size === 0 ? Direction.IDLE : Direction.DOWN;
       }
     } else if (this.direction === Direction.DOWN) {
       this.curFloor -= 1;
       this.processRequest(this.curFloor);
-      if (this.curFloor === this.downHead) {
-        this.direction = this.upHead === null ? Direction.IDLE : Direction.UP;
-        this.downHead = null;
+      this.downStops.delete(this.curFloor);
+      if (this.downStops.size === 0) {
+        this.direction =
+          this.upStops.size === 0 ? Direction.IDLE : Direction.UP;
       }
     }
 
-    updateInfo();
-
     if (this.direction !== Direction.IDLE) {
-      setTimeout(() => this.step(updateInfo), ElevatorSpeed);
+      setTimeout(() => this.step(triggerRerender), ElevatorSpeed);
     }
+
+    triggerRerender();
   }
 }
