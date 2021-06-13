@@ -5,5 +5,5 @@ export enum Direction {
 }
 
 export const FloorNumber = 10;
-export const ElevatorNumber = 1;
-export const ElevatorSpeed = 1500;
+export const ElevatorNumber = 2;
+export const ElevatorSpeed = 1000;
