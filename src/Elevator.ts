@@ -11,8 +11,6 @@ export default class Elevator {
   private curFloor: number = 0;
   private direction: Direction = Direction.IDLE;
   private floorRequestInfo: Request[][];
-  private upHead: number | null = null;
-  private downHead: number | null = null;
   private upStops: Set<number>;
   private downStops: Set<number>;
 
@@ -28,18 +26,6 @@ export default class Elevator {
 
   public getDirection() {
     return this.direction;
-  }
-
-  public getGoToInfo() {
-    if (this.direction === Direction.UP && this.upHead !== null) {
-      return `Go up to ${this.upHead + 1}`;
-    }
-
-    if (this.direction === Direction.DOWN && this.downHead !== null) {
-      return `Go up to ${this.downHead + 1}`;
-    }
-
-    return "";
   }
 
   public getRequestInfo() {

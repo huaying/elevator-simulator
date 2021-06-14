@@ -52,32 +52,35 @@ export default class ElevatorSystem extends React.Component<Props, State> {
     }
 
     // 2
-    const minFloorDiff = Math.min(
-      ...this.elevators.map((elevator) =>
-        Math.abs(elevator.getCurFloor() - floor)
-      )
-    );
-
-    const cloestMovingElevators = this.elevators.find(
-      (elevator) =>
-        Math.abs(elevator.getCurFloor() - floor) === minFloorDiff &&
-        ((elevator.getDirection() === Direction.UP &&
-          elevator.getCurFloor() < floor &&
-          floor < destFloor) ||
+    const getElevatorsWithSameDirectionOrIdle = this.elevators.filter(
+      (elevator) => {
+        const hasSameDirection =
+          (elevator.getDirection() === Direction.UP &&
+            elevator.getCurFloor() < floor &&
+            floor < destFloor) ||
           (elevator.getDirection() === Direction.DOWN &&
             elevator.getCurFloor() > floor &&
-            floor > destFloor))
+            floor > destFloor);
+        const isIdle = elevator.getDirection() === Direction.IDLE;
+        return hasSameDirection || isIdle;
+      }
     );
 
-    if (cloestMovingElevators) return cloestMovingElevators;
+    if (getElevatorsWithSameDirectionOrIdle.length > 0) {
+      const minFloorDiff = Math.min(
+        ...getElevatorsWithSameDirectionOrIdle.map((elevator) =>
+          Math.abs(elevator.getCurFloor() - floor)
+        )
+      );
 
-    const cloestIdleElevators = this.elevators.find(
-      (elevator) =>
-        Math.abs(elevator.getCurFloor() - floor) === minFloorDiff &&
-        elevator.getDirection() === Direction.IDLE
-    );
+      const elevator = getElevatorsWithSameDirectionOrIdle.find(
+        (elevator) => Math.abs(elevator.getCurFloor() - floor) === minFloorDiff
+      );
 
-    if (cloestIdleElevators) return cloestIdleElevators;
+      if (elevator) {
+        return elevator;
+      }
+    }
 
     // 3 return null and then the req will be put into the queue
     return null;
@@ -139,6 +142,7 @@ export default class ElevatorSystem extends React.Component<Props, State> {
                   {elevator.getCurFloor() === FloorNumber - idx - 1
                     ? ElevatorStyles[elevatorId % ElevatorStyles.length]
                     : "⬜️"}
+                  {FloorNumber - idx}
                 </div>
               ))}
             </div>
@@ -180,7 +184,6 @@ export default class ElevatorSystem extends React.Component<Props, State> {
             <div className="mb-1">
               Elevator: {idx + 1}
               <div className="ml-5">{elevator.getRequestInfo()}</div>
-              <div className="ml-5">{elevator.getGoToInfo()}</div>
               {elevator.getDirection() === Direction.IDLE && (
                 <div className="ml-5">Idle at {elevator.getCurFloor() + 1}</div>
               )}
